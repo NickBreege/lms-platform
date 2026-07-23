@@ -34,18 +34,24 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleDtoResponse createSchedule(ScheduleDtoRequest scheduleDtoRequest) {
-        validateLessonTime(scheduleDtoRequest.getLessonTime());
+        validateLessonInterval(scheduleDtoRequest.getLessonStart(), scheduleDtoRequest.getLessonEnd());
 
-        StudentGroup group = getStudentGroupOrThrow(scheduleDtoRequest.getStudentGroupId());
+        StudentGroup group = getGroupOrThrow(scheduleDtoRequest.getStudentGroupId());
         Course course = getCourseOrThrow(scheduleDtoRequest.getCourseId());
 
         validateGroupAssignedToCourse(group, course);
-        validateGroupTimeConflict(group.getId(), scheduleDtoRequest.getLessonTime());
-        validateTeacherTimeConflict(course.getTeacher().getId(), scheduleDtoRequest.getLessonTime());
+
+        validateGroupTimeConflict(group.getId(),
+                scheduleDtoRequest.getLessonStart(),
+                scheduleDtoRequest.getLessonEnd());
+
+        validateTeacherTimeConflict(course.getTeacher().getId(),
+                scheduleDtoRequest.getLessonStart(),
+                scheduleDtoRequest.getLessonEnd());
 
         Schedule schedule = new Schedule();
 
-        fillScheduleFromDto(schedule, scheduleDtoRequest);
+        fillScheduleFromDto(schedule, group, course, scheduleDtoRequest);
 
         return scheduleMapper.toDtoResponse(scheduleRepository.save(schedule));
     }
@@ -54,7 +60,7 @@ public class ScheduleService {
     public List<ScheduleDtoResponse> getGroupSchedule(Long groupId) {
         StudentGroup group = getGroupOrThrow(groupId);
 
-        return scheduleRepository.findByStudentGroupId(group.getId())
+        return scheduleRepository.findByStudentGroupIdOrderByLessonStartAsc(group.getId())
                 .stream()
                 .map(scheduleMapper::toDtoResponse)
                 .toList();
@@ -64,7 +70,7 @@ public class ScheduleService {
     public List<ScheduleDtoResponse> getTeacherSchedule(Long teacherId) {
         Teacher teacher = getTeacherOrThrow(teacherId);
 
-        return scheduleRepository.findByCourseTeacherIdOrderByLessonTimeAsc(teacher.getId())
+        return scheduleRepository.findByCourseTeacherIdOrderByLessonStartAsc(teacher.getId())
                 .stream()
                 .map(scheduleMapper::toDtoResponse)
                 .toList();
@@ -72,20 +78,25 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleDtoResponse updateSchedule(Long scheduleId, ScheduleDtoRequest scheduleDtoRequest) {
-        validateLessonTime(scheduleDtoRequest.getLessonTime());
+        validateLessonInterval(scheduleDtoRequest.getLessonStart(), scheduleDtoRequest.getLessonEnd());
 
         Schedule schedule = getScheduleOrThrow(scheduleId);
+
         StudentGroup group = getGroupOrThrow(scheduleDtoRequest.getStudentGroupId());
         Course course = getCourseOrThrow(scheduleDtoRequest.getCourseId());
 
         validateGroupAssignedToCourse(group, course);
-        validateGroupTimeConflictForUpdate(group.getId(), scheduleDtoRequest.getLessonTime(), schedule.getId());
+
+        validateGroupTimeConflictForUpdate(group.getId(), scheduleDtoRequest.getLessonStart(),
+                scheduleDtoRequest.getLessonEnd(), schedule.getId());
+
         validateTeacherTimeConflictForUpdate(
                 course.getTeacher().getId(),
-                scheduleDtoRequest.getLessonTime(),
+                scheduleDtoRequest.getLessonStart(),
+                scheduleDtoRequest.getLessonEnd(),
                 schedule.getId());
 
-        fillScheduleFromDto(schedule, scheduleDtoRequest);
+        fillScheduleFromDto(schedule, group, course, scheduleDtoRequest);
 
         return scheduleMapper.toDtoResponse(schedule);
     }
@@ -108,11 +119,6 @@ public class ScheduleService {
                 .orElseThrow(() -> new CourseNotFoundException(courseId));
     }
 
-    private StudentGroup getStudentGroupOrThrow(Long groupId) {
-        return groupRepository.findById(groupId)
-                .orElseThrow(() -> new GroupNotFoundException(groupId));
-    }
-
     private StudentGroup getGroupOrThrow(Long groupId) {
         return groupRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
@@ -123,57 +129,64 @@ public class ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
     }
 
-    private void validateLessonTime(LocalDateTime lessonTime) {
-        if (lessonTime == null) {
-            throw new IllegalArgumentException("Время занятия не может быть null");
+    private void validateLessonInterval(LocalDateTime lessonStart, LocalDateTime lessonEnd) {
+        if (!lessonEnd.isAfter(lessonStart)) {
+            throw new IllegalArgumentException("Время окончания занятия должно быть позже времени начала");
         }
     }
 
-    private void validateGroupTimeConflict(Long groupId, LocalDateTime lessonTime) {
-        boolean exists = scheduleRepository.existsByStudentGroupIdAndLessonTime(groupId, lessonTime);
+    private void validateGroupTimeConflict(Long groupId, LocalDateTime lessonStart, LocalDateTime lessonEnd) {
+        boolean exists = scheduleRepository.existsGroupConflict(groupId, lessonStart, lessonEnd);
 
         if (exists) {
             throw new IllegalArgumentException("У группы уже есть занятие в это время");
         }
     }
 
-    private void validateTeacherTimeConflict(Long teacherId, LocalDateTime lessonTime) {
-        boolean exists = scheduleRepository.existsByCourseTeacherIdAndLessonTime(teacherId, lessonTime);
+    private void validateTeacherTimeConflict(Long teacherId, LocalDateTime lessonStart, LocalDateTime lessonEnd) {
+        boolean exists = scheduleRepository.existsTeacherConflict(teacherId, lessonStart, lessonEnd);
 
         if (exists) {
             throw new IllegalArgumentException("У преподавателя уже есть занятие в это время");
         }
     }
 
-    private void validateGroupAssignedToCourse(StudentGroup studentGroup, Course course) {
-        if (!studentGroup.getCourses().contains(course)) {
-            throw new IllegalArgumentException("Группа не записана на курс");
+    private void validateGroupAssignedToCourse(StudentGroup group, Course course) {
+        if (!group.getCourses().contains(course)) {
+            throw new IllegalArgumentException("Группа не записана на этот курс");
         }
     }
 
-    private void fillScheduleFromDto(Schedule schedule, ScheduleDtoRequest scheduleDtoRequest) {
-        StudentGroup studentGroup = getGroupOrThrow(scheduleDtoRequest.getStudentGroupId());
-        Course course = getCourseOrThrow(scheduleDtoRequest.getCourseId());
+    private void fillScheduleFromDto(Schedule schedule,
+                                     StudentGroup studentGroup,
+                                     Course course,
+                                     ScheduleDtoRequest scheduleDtoRequest) {
 
         schedule.setStudentGroup(studentGroup);
         schedule.setCourse(course);
-        schedule.setLessonTime(scheduleDtoRequest.getLessonTime());
+        schedule.setLessonStart(scheduleDtoRequest.getLessonStart());
+        schedule.setLessonEnd(scheduleDtoRequest.getLessonEnd());
     }
 
-    private void validateGroupTimeConflictForUpdate(Long groupId, LocalDateTime lessonTime, Long scheduleId) {
+    private void validateGroupTimeConflictForUpdate(Long groupId,
+                                                    LocalDateTime lessonStart,
+                                                    LocalDateTime lessonEnd,
+                                                    Long scheduleId) {
 
-        boolean exists = scheduleRepository
-                .existsByStudentGroupIdAndLessonTimeAndIdNot(groupId, lessonTime, scheduleId);
+        boolean exists = scheduleRepository.existsGroupConflictForUpdate(groupId, lessonStart, lessonEnd, scheduleId);
 
         if (exists) {
             throw new IllegalArgumentException("У группы уже есть занятие в это время");
         }
     }
 
-    private void validateTeacherTimeConflictForUpdate(Long teacherId, LocalDateTime lessonTime, Long scheduleId) {
+    private void validateTeacherTimeConflictForUpdate(Long teacherId,
+                                                      LocalDateTime lessonStart,
+                                                      LocalDateTime lessonEnd,
+                                                      Long scheduleId) {
 
         boolean exists = scheduleRepository
-                .existsByCourseTeacherIdAndLessonTimeAndIdNot(teacherId, lessonTime, scheduleId);
+                .existsTeacherConflictForUpdate(teacherId, lessonStart, lessonEnd, scheduleId);
 
         if (exists) {
             throw new IllegalArgumentException("У преподавателя уже есть занятие в это время");

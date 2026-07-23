@@ -25,10 +25,6 @@ public class GroupService {
     public StudentGroupDtoResponse createGroup(StudentGroupDtoRequest groupDtoRequest) {
         String name = groupDtoRequest.getName();
 
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Невалидное имя группы: " + groupDtoRequest.getName());
-        }
-
         name = name.trim();
         if (groupRepository.existsByName(name)) {
             throw new IllegalArgumentException("Группа уже существует");
@@ -46,9 +42,6 @@ public class GroupService {
         StudentGroup studentGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
 
-        if (groupDtoRequest.getName() == null || groupDtoRequest.getName().isBlank()) {
-            throw new IllegalArgumentException("Невалидное имя группы: " + groupDtoRequest.getName());
-        }
 
         String name = groupDtoRequest.getName().trim();
         if (groupRepository.existsByNameAndIdNot(name, groupId)) {

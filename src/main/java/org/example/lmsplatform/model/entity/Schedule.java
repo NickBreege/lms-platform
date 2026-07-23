@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "schedules")
 public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,5 +26,8 @@ public class Schedule {
     private Course course;
 
     @Column(nullable = false)
-    private LocalDateTime lessonTime;
+    private LocalDateTime lessonStart;
+
+    @Column(nullable = false)
+    private LocalDateTime lessonEnd;
 }

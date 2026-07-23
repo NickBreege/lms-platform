@@ -19,5 +19,6 @@ public class ScheduleDtoResponse {
     private Long teacherId;
     private String teacherFullName;
 
-    private LocalDateTime lessonTime;
+    private LocalDateTime lessonStart;
+    private LocalDateTime lessonEnd;
 }

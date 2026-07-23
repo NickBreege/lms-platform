@@ -13,10 +13,10 @@ import org.example.lmsplatform.model.entity.Course;
 import org.example.lmsplatform.model.entity.StudentGroup;
 import org.example.lmsplatform.model.entity.Teacher;
 import org.example.lmsplatform.model.mapper.CourseMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 
 @Service
@@ -57,11 +57,8 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public List<CourseDtoResponse> getAllCourses() {
-        return courseRepository.findAll()
-                .stream()
-                .map(courseMapper::toDtoResponse)
-                .toList();
+    public Page<CourseDtoResponse> getAllCourses(Pageable pageable) {
+        return courseRepository.findAll(pageable).map(courseMapper::toDtoResponse);
     }
 
     @Transactional
