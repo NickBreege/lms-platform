@@ -25,6 +25,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final GroupRepository groupRepository;
@@ -34,20 +35,20 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleDtoResponse createSchedule(ScheduleDtoRequest scheduleDtoRequest) {
-        validateLessonInterval(scheduleDtoRequest.getLessonStart(), scheduleDtoRequest.getLessonEnd());
+        validateLessonInterval(scheduleDtoRequest.lessonStart(), scheduleDtoRequest.lessonEnd());
 
-        StudentGroup group = getGroupOrThrow(scheduleDtoRequest.getStudentGroupId());
-        Course course = getCourseOrThrow(scheduleDtoRequest.getCourseId());
+        StudentGroup group = getGroupOrThrow(scheduleDtoRequest.studentGroupId());
+        Course course = getCourseOrThrow(scheduleDtoRequest.courseId());
 
         validateGroupAssignedToCourse(group, course);
 
         validateGroupTimeConflict(group.getId(),
-                scheduleDtoRequest.getLessonStart(),
-                scheduleDtoRequest.getLessonEnd());
+                scheduleDtoRequest.lessonStart(),
+                scheduleDtoRequest.lessonEnd());
 
         validateTeacherTimeConflict(course.getTeacher().getId(),
-                scheduleDtoRequest.getLessonStart(),
-                scheduleDtoRequest.getLessonEnd());
+                scheduleDtoRequest.lessonStart(),
+                scheduleDtoRequest.lessonEnd());
 
         Schedule schedule = new Schedule();
 
@@ -56,7 +57,6 @@ public class ScheduleService {
         return scheduleMapper.toDtoResponse(scheduleRepository.save(schedule));
     }
 
-    @Transactional(readOnly = true)
     public List<ScheduleDtoResponse> getGroupSchedule(Long groupId) {
         StudentGroup group = getGroupOrThrow(groupId);
 
@@ -66,7 +66,6 @@ public class ScheduleService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<ScheduleDtoResponse> getTeacherSchedule(Long teacherId) {
         Teacher teacher = getTeacherOrThrow(teacherId);
 
@@ -78,22 +77,22 @@ public class ScheduleService {
 
     @Transactional
     public ScheduleDtoResponse updateSchedule(Long scheduleId, ScheduleDtoRequest scheduleDtoRequest) {
-        validateLessonInterval(scheduleDtoRequest.getLessonStart(), scheduleDtoRequest.getLessonEnd());
+        validateLessonInterval(scheduleDtoRequest.lessonStart(), scheduleDtoRequest.lessonEnd());
 
         Schedule schedule = getScheduleOrThrow(scheduleId);
 
-        StudentGroup group = getGroupOrThrow(scheduleDtoRequest.getStudentGroupId());
-        Course course = getCourseOrThrow(scheduleDtoRequest.getCourseId());
+        StudentGroup group = getGroupOrThrow(scheduleDtoRequest.studentGroupId());
+        Course course = getCourseOrThrow(scheduleDtoRequest.courseId());
 
         validateGroupAssignedToCourse(group, course);
 
-        validateGroupTimeConflictForUpdate(group.getId(), scheduleDtoRequest.getLessonStart(),
-                scheduleDtoRequest.getLessonEnd(), schedule.getId());
+        validateGroupTimeConflictForUpdate(group.getId(), scheduleDtoRequest.lessonStart(),
+                scheduleDtoRequest.lessonEnd(), schedule.getId());
 
         validateTeacherTimeConflictForUpdate(
                 course.getTeacher().getId(),
-                scheduleDtoRequest.getLessonStart(),
-                scheduleDtoRequest.getLessonEnd(),
+                scheduleDtoRequest.lessonStart(),
+                scheduleDtoRequest.lessonEnd(),
                 schedule.getId());
 
         fillScheduleFromDto(schedule, group, course, scheduleDtoRequest);
@@ -164,8 +163,8 @@ public class ScheduleService {
 
         schedule.setStudentGroup(studentGroup);
         schedule.setCourse(course);
-        schedule.setLessonStart(scheduleDtoRequest.getLessonStart());
-        schedule.setLessonEnd(scheduleDtoRequest.getLessonEnd());
+        schedule.setLessonStart(scheduleDtoRequest.lessonStart());
+        schedule.setLessonEnd(scheduleDtoRequest.lessonEnd());
     }
 
     private void validateGroupTimeConflictForUpdate(Long groupId,

@@ -32,8 +32,9 @@ public class StudentService {
     }
 
     @Transactional
-    public StudentDtoResponse getStudentById(Long id) {
-        Student student = studentRepository.findById(id).orElseThrow(() -> new StudentNotFoundException(id));
+    public StudentDtoResponse getStudentById(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new StudentNotFoundException(studentId));
         return studentMapper.toDtoResponse(student);
     }
 
@@ -90,9 +91,9 @@ public class StudentService {
 
 
     private void fillStudentFromDto(Student student, StudentDtoRequest studentDtoRequest) {
-        student.setName(studentDtoRequest.getName());
-        student.setSurname(studentDtoRequest.getSurname());
-        setGroupOrThrow(student, studentDtoRequest.getStudentGroupId());
+        student.setName(studentDtoRequest.name());
+        student.setSurname(studentDtoRequest.surname());
+        setGroupOrThrow(student, studentDtoRequest.studentGroupId());
     }
 
     private void setGroupOrThrow(Student student, Long groupId) {

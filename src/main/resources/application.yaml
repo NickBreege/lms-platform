@@ -22,3 +22,6 @@ logging:
     liquibase: DEBUG
     root: INFO
 
+app:
+  cleanup:
+    cron: "0 0 12 * * *"

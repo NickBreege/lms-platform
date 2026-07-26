@@ -68,4 +68,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     List<Schedule> findByCourseTeacherIdOrderByLessonStartAsc(Long teacherId);
 
+    void deleteByLessonStartBefore(LocalDateTime lessonStart);
 }

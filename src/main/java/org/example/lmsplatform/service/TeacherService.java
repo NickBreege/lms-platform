@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TeacherService {
     private final TeacherRepository teacherRepository;
     private final TeacherMapper teacherMapper;
@@ -24,9 +25,8 @@ public class TeacherService {
         return teacherMapper.toDtoResponse(teacherRepository.save(teacher));
     }
 
-    @Transactional(readOnly = true)
-    public TeacherDtoResponse getTeacherById(Long id) {
-        Teacher teacher = getTeacherOrThrow(id);
+    public TeacherDtoResponse getTeacherById(Long teacherId) {
+        Teacher teacher = getTeacherOrThrow(teacherId);
         return teacherMapper.toDtoResponse(teacher);
     }
 
@@ -50,7 +50,7 @@ public class TeacherService {
     }
 
     private void fillTeacherFromDto(Teacher teacher, TeacherDtoRequest teacherDtoRequest) {
-        teacher.setName(teacherDtoRequest.getName());
-        teacher.setSurname(teacherDtoRequest.getSurname());
+        teacher.setName(teacherDtoRequest.name());
+        teacher.setSurname(teacherDtoRequest.surname());
     }
 }

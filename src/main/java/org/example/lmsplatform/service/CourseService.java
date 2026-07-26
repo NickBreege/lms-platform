@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CourseService {
     private final CourseRepository courseRepository;
     private final GroupRepository groupRepository;
@@ -50,13 +51,11 @@ public class CourseService {
         courseRepository.delete(course);
     }
 
-    @Transactional(readOnly = true)
     public CourseDtoResponse getCourse(Long courseId) {
         Course course = getCourseOrThrow(courseId);
         return courseMapper.toDtoResponse(course);
     }
 
-    @Transactional(readOnly = true)
     public Page<CourseDtoResponse> getAllCourses(Pageable pageable) {
         return courseRepository.findAll(pageable).map(courseMapper::toDtoResponse);
     }
@@ -96,8 +95,8 @@ public class CourseService {
     }
 
     private void fillCourseFromDto(Course course, CourseDtoRequest courseDtoRequest) {
-        course.setName(courseDtoRequest.getName());
-        course.setDescription(courseDtoRequest.getDescription());
-        course.setTeacher(getTeacherOrThrow(courseDtoRequest.getTeacherId()));
+        course.setName(courseDtoRequest.name());
+        course.setDescription(courseDtoRequest.description());
+        course.setTeacher(getTeacherOrThrow(courseDtoRequest.teacherId()));
     }
 }

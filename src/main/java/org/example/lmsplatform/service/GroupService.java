@@ -23,7 +23,7 @@ public class GroupService {
 
     @Transactional
     public StudentGroupDtoResponse createGroup(StudentGroupDtoRequest groupDtoRequest) {
-        String name = groupDtoRequest.getName();
+        String name = groupDtoRequest.name();
 
         name = name.trim();
         if (groupRepository.existsByName(name)) {
@@ -43,7 +43,7 @@ public class GroupService {
                 .orElseThrow(() -> new GroupNotFoundException(groupId));
 
 
-        String name = groupDtoRequest.getName().trim();
+        String name = groupDtoRequest.name().trim();
         if (groupRepository.existsByNameAndIdNot(name, groupId)) {
             throw new IllegalArgumentException("Группа уже существует");
         }
@@ -55,9 +55,9 @@ public class GroupService {
     }
 
     @Transactional
-    public void deleteGroup(Long id) {
-        StudentGroup studentGroup = groupRepository.findById(id)
-                .orElseThrow(() -> new GroupNotFoundException(id));
+    public void deleteGroup(Long groupId) {
+        StudentGroup studentGroup = groupRepository.findById(groupId)
+                .orElseThrow(() -> new GroupNotFoundException(groupId));
 
         groupRepository.delete(studentGroup);
     }
@@ -72,7 +72,5 @@ public class GroupService {
 
         course.getStudentGroups().add(studentGroup);
         studentGroup.getCourses().add(course);
-
-        groupRepository.save(studentGroup);
     }
 }

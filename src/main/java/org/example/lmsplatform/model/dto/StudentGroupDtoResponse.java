@@ -1,16 +1,13 @@
 package org.example.lmsplatform.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.Set;
 
-@Data
-@AllArgsConstructor
-public class StudentGroupDtoResponse {
-    private Long id;
-    private String name;
-    private Set<Long> courseIds;
-    private Set<Long> studentIds;
-    private Set<Long> scheduleIds;
+
+public record StudentGroupDtoResponse(
+        Long id,
+        String name,
+        Set<Long> courseIds,
+        Set<Long> studentIds,
+        Set<Long> scheduleIds
+) {
 }
