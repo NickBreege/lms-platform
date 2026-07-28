@@ -17,7 +17,7 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 @Tag(name = "Students", description = "Управление студентами")
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/students")
+@RequestMapping("/api/v1/students")
 public class StudentController {
     private final StudentService studentService;
 

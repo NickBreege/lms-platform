@@ -15,7 +15,7 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 @Tag(name = "Groups", description = "Управление группами студентов")
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/groups")
+@RequestMapping("/api/v1/groups")
 public class GroupController {
     private final GroupService groupService;
 
