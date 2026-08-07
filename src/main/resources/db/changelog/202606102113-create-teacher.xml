@@ -1,0 +1,16 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="202606101721-create-teacher-1" author="braginnikolai">
+        <sql>
+            CREATE TABLE teachers
+            (
+                id      BIGSERIAL PRIMARY KEY,
+                name    VARCHAR(100) NOT NULL,
+                surname VARCHAR(100) NOT NULL
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
