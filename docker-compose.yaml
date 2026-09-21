@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: lms-postgres
+    environment:
+      POSTGRES_DB: lms_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12341234
+    ports:
+      - "5433:5432"
+
+  app:
+    build: .
+    container_name: lms-app
+    depends_on:
+      - postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"

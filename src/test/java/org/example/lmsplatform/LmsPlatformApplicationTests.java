@@ -1,4 +1,4 @@
-package org.example.lms_platform;
+package org.example.lmsplatform;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

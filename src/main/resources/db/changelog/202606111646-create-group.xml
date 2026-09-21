@@ -1,0 +1,30 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="202606111646-create-group-1" author="braginnikolai">
+        <sql>
+            CREATE TABLE groups
+            (
+                id   BIGSERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE
+            );
+
+
+            CREATE TABLE group_course
+            (
+                group_id  BIGINT NOT NULL,
+                course_id BIGINT NOT NULL,
+
+                PRIMARY KEY (group_id, course_id),
+
+                FOREIGN KEY (group_id) references groups (id),
+                FOREIGN KEY (course_id) references courses (id)
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
+
+
+
